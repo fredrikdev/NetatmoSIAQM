@@ -1,5 +1,6 @@
 # NetatmoSIAQM for Scriptable
 *Not affiliated with Netatmo in any way.*
+
 https://github.com/fredrikdev/NetatmoSIAQM
 
 **Scriptable Widget for the Netatmo Smart Indoor Air Quality Monitor (usually interfaced with by the iOS app Netatmo Home Coach) using the Netatmo Aircare API.**
@@ -24,7 +25,7 @@ https://github.com/fredrikdev/NetatmoSIAQM
         username:yournetatmoaccount@email.com
         password:secretpassword
 
-4) Paste the string in the params variable below.
+4) Paste the string in the params variable in the script.
 5) On your home screen, add the new Scriptable Widget as a medium sized widget with the script.
 
 ## Credits
