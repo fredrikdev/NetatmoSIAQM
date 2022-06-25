@@ -40,41 +40,42 @@ let req2 = new Request(`https://api.netatmo.net/api/gethomecoachsdata?access_tok
 let res2 = await req2.loadJSON()
   
 // store data into d and dd  
-console.log(res2.body)
 let d = res2.body.devices[0]
 let dd = d.dashboard_data
 
 // layout data on widget
-function row(p, vertical) {
+function row(p) {
   let r = p.addStack()
+  let vertical = 0
   for (let x = 1; x < arguments.length; x++) {
     let i = arguments[x]
     let c = r.addStack()
-    let vertical = false
     for (let y = 0; y < i.length; y++) {
       let s = i[y]
       if (s.vertical) {
         c.layoutVertically()
-        vertical = true
+        c.centerAlignContent()
+        vertical = s.vertical
       } else {
         c.centerAlignContent()
       }
       let tc = c.addStack(), t1 = null, t2 = null
+      tc.setPadding(s.padt || 0, 0, s.padb || 0, 0)
       t1 = tc.addText(s.t1)
       t1.textColor = Color.white()
-      t1.font = s.f1|| Font.lightSystemFont(16)
+      t1.font = s.f1|| Font.lightSystemFont(14)
       t1.lineLimit = 1
       if (s.t2) {
         t2 = tc.addText(s.t2)
         t2.textColor = Color.white()
-        t2.font = s.f2 || Font.lightSystemFont(16)
+        t2.font = s.f2 || Font.lightSystemFont(14)
         t2.lineLimit = 1
       }
       
       if (vertical) {
         if (y == i.length - 1) {
         } else {
-          c.addSpacer(4)
+          c.addSpacer(vertical == 99 ? null : vertical)
         }
       } else {
         if (y == i.length - 1) {
@@ -85,16 +86,18 @@ function row(p, vertical) {
         }
       }
     }  
-      
     if (x != arguments.length - 1) {
-      r.addSpacer()
+       r.addSpacer()
     }
   }
+  return r
 }
 
+let padding = 6*Device.screenScale()
 let w = new ListWidget()
+w.setPadding(0, 0, 0, 0)
+w.minimumScaleFactor = 0.6
 let g = new LinearGradient()
-//g.colors = [new Color("85A6D3"),new Color("B2FAEF")]
 g.colors = [new Color("64C5E8"),new Color("2F83B9")]
 g.locations = [0,1.5]
 w.backgroundGradient = g
@@ -104,41 +107,41 @@ let f = new DateFormatter()
 f.useMediumDateStyle()
 f.useShortTimeStyle()
 
-let fm16 = Font.mediumSystemFont(16)
+let fm16 = Font.mediumSystemFont(14)
 
-row(w, [ 
+let r1 = row(w, [ 
 { t1: `${d.station_name}`, f1: fm16 },
 { t1: `${f.string(new Date(dd.time_utc * 1000))}` } ]
 )
-
-w.addSpacer()
+r1.setPadding(padding, padding, padding/2, padding)
 
 // row 2
-let fm40 = Font.mediumRoundedSystemFont(40)
-let fl40 = Font.lightRoundedSystemFont(40)
+let fm40 = Font.mediumSystemFont(40)
+let fl40 = Font.lightSystemFont(40)
 
-row(w, [
+let r2 = row(w, [
 { t1: `${dd.Temperature}`, f1: fm40, t2: `°`, f2: fl40 } ], [
-{ t1: `⤒ ${dd.max_temp}°`, vertical: true },
-{ t1: `⤓ ${dd.min_temp}°` } ]
+{ t1: `⤒ ${dd.max_temp}°`, vertical: 2, padt: 6 },
+{ t1: `⤓ ${dd.min_temp}°`, padb: 6 } ]
 )
-
-w.addSpacer()
+r2.setPadding(0, padding, padding/2, padding)
 
 // row 3
-row(w, [
-{ t1: `HUMIDITY`, vertical: true },
+let r3 = row(w, [
+{ t1: `HUMIDITY`, vertical: 4 },
 { t1: `${dd.Humidity}`, f1: fm16, t2: ` %`}
 ], [
-{ t1: `CO2`, vertical: true },
+{ t1: `CO₂`, vertical: 4 },
 { t1: `${dd.CO2}`, f1: fm16, t2: ` ppm`}
 ], [
-{ t1: `NOISE`, vertical: true },
+{ t1: `NOISE`, vertical: 4 },
 { t1: `${dd.Noise}`, f1: fm16, t2: ` dB`}
 ], [
-{ t1: `PRESSURE`, vertical: true },
+{ t1: `PRESSURE`, vertical: 4 },
 { t1: `${dd.AbsolutePressure}`, f1: fm16, t2: ` mbar` }
 ])
+r3.setPadding(padding/2, padding, padding, padding)
+r3.backgroundColor = g.colors[0]
 
 // display
 if (config.runsInApp) {
