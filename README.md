@@ -16,7 +16,7 @@ https://github.com/fredrikdev/NetatmoSIAQM
 
 ## Setup
 
-1) Create a new script in the iOS Scriptable app, add a name, icon, glyph, and paste this script.
+1) Create a new script in the iOS Scriptable app, add a name, icon, glyph, and paste [this script](NetatmoSIAQM.js).
 2) Login to your Netatmo Account at https://dev.netatmo.com/, and create a new app: https://dev.netatmo.com/apps/createanapp
 3) Copy the fields Client Id and Client Secret (perhaps into iOS Notes), and construct & copy a string like this (use space/newline to separate fields):
    
