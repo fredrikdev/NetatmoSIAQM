@@ -3,7 +3,7 @@
 
 https://github.com/fredrikdev/NetatmoSIAQM
 
-**Scriptable Widget for the Netatmo Smart Indoor Air Quality Monitor (usually interfaced with by the iOS app Netatmo Home Coach) using the Netatmo Aircare API.**
+**Scriptable Widget for the Netatmo Smart Indoor Air Quality Monitor (usually interfaced with by the iOS app Netatmo Home Coach) using the Netatmo Aircare API (https://dev.netatmo.com/apidocumentation/aircare).**
 
 
 ## Screenshots
