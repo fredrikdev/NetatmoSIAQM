@@ -1,9 +1,9 @@
-# NetatmoSIAQM for Scriptable
+# NetatmoSIAQM for [Scriptable](https://scriptable.app/)
 *Not affiliated with Netatmo in any way.*
 
 https://github.com/fredrikdev/NetatmoSIAQM
 
-**Scriptable Widget for the Netatmo Smart Indoor Air Quality Monitor (usually interfaced with by the iOS app Netatmo Home Coach) using the Netatmo Aircare API (https://dev.netatmo.com/apidocumentation/aircare).**
+**[Scriptable](https://scriptable.app/) Widget for the Netatmo Smart Indoor Air Quality Monitor (usually interfaced with by the iOS app Netatmo Home Coach) using the [Netatmo Aircare API](https://dev.netatmo.com/apidocumentation/aircare).**
 
 
 ## Screenshots
@@ -16,7 +16,7 @@ https://github.com/fredrikdev/NetatmoSIAQM
 
 ## Setup
 
-1) Create a new script in the iOS Scriptable app, add a name, icon, glyph, and paste [this script](NetatmoSIAQM.js).
+1) Create a new script in the [iOS Scriptable app](https://scriptable.app/) add a name, icon, glyph, and paste [this script](NetatmoSIAQM.js).
 2) Login to your Netatmo Account at https://dev.netatmo.com/, and create a new app: https://dev.netatmo.com/apps/createanapp
 3) Copy the fields Client Id and Client Secret (perhaps into iOS Notes), and construct & copy a string like this (use space/newline to separate fields):
    
