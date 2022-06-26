@@ -94,13 +94,18 @@ function row(p) {
 }
 
 let padding = 6*Device.screenScale()
+let paddingLine = 1*Device.screenScale()
 let w = new ListWidget()
 w.setPadding(0, 0, 0, 0)
 w.minimumScaleFactor = 0.6
+
 let g = new LinearGradient()
 g.colors = [new Color("64C5E8"),new Color("2F83B9")]
 g.locations = [0,1.5]
 w.backgroundGradient = g
+
+let s = w.addStack()
+s.layoutVertically()
 
 // row 1
 let f = new DateFormatter()
@@ -109,38 +114,40 @@ f.useShortTimeStyle()
 
 let fm16 = Font.mediumSystemFont(14)
 
-let r1 = row(w, [ 
+let r1 = row(s, [ 
 { t1: `${d.station_name}`, f1: fm16 },
 { t1: `${f.string(new Date(dd.time_utc * 1000))}` } ]
 )
-r1.setPadding(padding, padding, padding/2, padding)
+r1.setPadding(padding, padding, 0, padding)
+s.addSpacer()
 
 // row 2
-let fm40 = Font.mediumSystemFont(40)
-let fl40 = Font.lightSystemFont(40)
+let fm40 = Font.mediumRoundedSystemFont(40)
+let fl40 = Font.lightRoundedSystemFont(40)
 
-let r2 = row(w, [
+let r2 = row(s, [
 { t1: `${dd.Temperature}`, f1: fm40, t2: `°`, f2: fl40 } ], [
-{ t1: `⤒ ${dd.max_temp}°`, vertical: 2, padt: 6 },
-{ t1: `⤓ ${dd.min_temp}°`, padb: 6 } ]
+{ t1: `⤒ ${dd.max_temp || dd.Temperature}°`, vertical: 2, padt: 6 },
+{ t1: `⤓ ${dd.min_temp || dd.Temperature}°`, padb: 6 } ]
 )
-r2.setPadding(0, padding, padding/2, padding)
+r2.setPadding(0, padding, 0, padding)
+s.addSpacer()
 
 // row 3
-let r3 = row(w, [
-{ t1: `HUMIDITY`, vertical: 4 },
+let r3 = row(s, [
+{ t1: `HUMIDITY`, vertical: paddingLine },
 { t1: `${dd.Humidity}`, f1: fm16, t2: ` %`}
 ], [
-{ t1: `CO₂`, vertical: 4 },
+{ t1: `CO₂`, vertical: paddingLine },
 { t1: `${dd.CO2}`, f1: fm16, t2: ` ppm`}
 ], [
-{ t1: `NOISE`, vertical: 4 },
+{ t1: `NOISE`, vertical: paddingLine },
 { t1: `${dd.Noise}`, f1: fm16, t2: ` dB`}
 ], [
-{ t1: `PRESSURE`, vertical: 4 },
+{ t1: `PRESSURE`, vertical: paddingLine },
 { t1: `${dd.AbsolutePressure}`, f1: fm16, t2: ` mbar` }
 ])
-r3.setPadding(padding/2, padding, padding, padding)
+r3.setPadding(padding/2, padding, padding/2, padding)
 r3.backgroundColor = g.colors[0]
 
 // display
@@ -149,3 +156,4 @@ if (config.runsInApp) {
 } else {  
   Script.setWidget(w)
 }
+Script.complete()
