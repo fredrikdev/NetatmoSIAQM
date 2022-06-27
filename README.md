@@ -26,7 +26,7 @@ https://github.com/fredrikdev/NetatmoSIAQM
         password:secretpassword
 
 4) Paste the string in the params variable in the script.
-5) On your home screen, add the new Scriptable Widget as a medium sized widget with the script.
+5) On your home screen, add the new Scriptable Widget as a (medium sized preferred) widget with the script.
 
 ## Credits
 
