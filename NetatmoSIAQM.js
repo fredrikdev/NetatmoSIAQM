@@ -21,27 +21,47 @@ Provided for free, MIT, as-is, by fredrikdev 2022. Inspired by https://github.co
 let params = ``
 
 function param(name) {
-  return new RegExp(`${name}:([^\n\r\t ]+)`, "g").exec(params)[1]
+  try {
+    return new RegExp(`${name}:([^\n\r\t ]+)`, "g").exec(params)[1]
+  } catch (ex) {
+    throw new Error(`Param "${name}" not found`)
+  }
 }
 
-// authenticate to get acces_token
-let req1 = new Request("https://api.netatmo.net/oauth2/token")
-req1.method = "POST"
-req1.addParameterToMultipart("grant_type", "password")
-req1.addParameterToMultipart("client_id", param("client_id"))
-req1.addParameterToMultipart("client_secret", param("client_secret"))
-req1.addParameterToMultipart("username", param("username"))
-req1.addParameterToMultipart("password", param("password"))
-req1.addParameterToMultipart("scope", "read_homecoach")
-let res1 = await req1.loadJSON()
-  
-// request the data
-let req2 = new Request(`https://api.netatmo.net/api/gethomecoachsdata?access_token=${encodeURI(res1.access_token)}`)
-let res2 = await req2.loadJSON()
-  
-// store data into d and dd  
-let d = res2.body.devices[0]
-let dd = d.dashboard_data
+let d = null, dd = null, ex = null
+
+if (params == "") {
+  d = JSON.parse(`{"devices":[{"dashboard_data":{"Humidity":61,"Temperature":25.7,"max_temp":25.7,"Noise":48,"health_idx":0,"Pressure":1017.1,"date_min_temp":1656372621,"min_temp":23.4,"time_utc":1656398309,"CO2":446,"AbsolutePressure":1012.2,"date_max_temp":1656398309},"station_name":"Please setup the script!","firmware":59,"reachable":true}]}`)
+  d = d.devices[0]
+  dd = d.dashboard_data
+} else {  
+  try {   
+    // authenticate to get acces_token
+    let req1 = new Request("https://api.netatmo.net/oauth2/token")
+    req1.method = "POST"
+    req1.addParameterToMultipart("grant_type", "password")
+    req1.addParameterToMultipart("client_id", param("client_id"))
+    req1.addParameterToMultipart("client_secret", param("client_secret"))
+    req1.addParameterToMultipart("username", param("username"))
+    req1.addParameterToMultipart("password", param("password"))
+    req1.addParameterToMultipart("scope", "read_homecoach")
+    let res1 = await req1.loadJSON()
+    if (!res1.access_token)
+      throw new Error("Authentication error")
+      
+    // request the data
+    let req2 = new Request(`https://api.netatmo.net/api/gethomecoachsdata?access_token=${encodeURI(res1.access_token)}`)
+    let res2 = await req2.loadJSON()
+    if (!res2.body || !res2.body.devices || res2.body.devices.length == 0)
+       throw new Error("No data received")
+      
+    // store data into d and dd  
+    d = res2.body.devices[0]
+    dd = d.dashboard_data
+  } catch (e) {
+    ex = e.message
+  }   
+}
 
 // layout data on widget
 
@@ -129,7 +149,16 @@ w.backgroundGradient = g
 let s = w.addStack()
 s.layoutVertically()
 
-if (widgetFamily == "small") {
+if (ex) {
+  // data error
+  let r1 = s.addStack()
+  let t = r1.addText(`Error loading data. Please check that you've setup the params variable correctly: ${ex}`)
+  t.textColor = Color.white()
+  t.font = fm16
+  r1.setPadding(padding, padding, padding, padding)
+  r1.backgroundColor = new Color("FF666B")
+} else if (widgetFamily == "small") {
+  // small
   padding = 6*Device.screenScale()
   f.useNoDateStyle()
   fm16 = Font.mediumSystemFont(12)
@@ -139,7 +168,7 @@ if (widgetFamily == "small") {
   
   // row 1
   let r1 = row(s, [ 
-  { t1: `${d.station_name}`, f1: fm16 },
+  { t1: `${(d.reachable ? "" : "(Unreachable) ") + d.station_name}`, f1: fm16 },
   { t1: `${f.string(new Date(dd.time_utc * 1000))}` } ]
   )
   r1.setPadding(padding, padding, 0, padding)
@@ -177,9 +206,11 @@ if (widgetFamily == "small") {
   { t1: `PRESSURE` },
   { t1: `${Math.trunc(dd.AbsolutePressure)}`, f1: fm16, t2: ` mb` }]).setPadding(0, 0, 0, 0)
 } else {
+  // medium & large
+  
   // row 1
   let r1 = row(s, [ 
-  { t1: `${d.station_name}`, f1: fm16 },
+  { t1: `${(d.reachable ? "" : "(Unreachable) ") + d.station_name}`, f1: fm16 },
   { t1: `${f.string(new Date(dd.time_utc * 1000))}` } ]
   )
   if (widgetFamily == "medium") {
