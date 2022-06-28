@@ -44,74 +44,6 @@ let d = res2.body.devices[0]
 let dd = d.dashboard_data
 
 // layout data on widget
-function row(p) {
-  let r = p.addStack()
-  let vertical = 0
-  for (let x = 1; x < arguments.length; x++) {
-    let i = arguments[x]
-    let c = r.addStack()
-    for (let y = 0; y < i.length; y++) {
-      let s = i[y]
-      if (s.vertical) {
-        c.layoutVertically()
-        c.centerAlignContent()
-        vertical = s.vertical
-      } else {
-        c.centerAlignContent()
-      }
-      let tc = c.addStack(), t1 = null, t2 = null
-      tc.setPadding(s.padt || 0, 0, s.padb || 0, 0)
-      t1 = tc.addText(s.t1)
-      t1.textColor = Color.white()
-      t1.font = s.f1|| Font.lightSystemFont(14)
-      t1.lineLimit = 1
-      if (s.t2) {
-        t2 = tc.addText(s.t2)
-        t2.textColor = Color.white()
-        t2.font = s.f2 || Font.lightSystemFont(14)
-        t2.lineLimit = 1
-      }
-      
-      if (vertical) {
-        if (y == i.length - 1) {
-        } else {
-          c.addSpacer(vertical == 99 ? null : vertical)
-        }
-      } else {
-        if (y == i.length - 1) {
-          if (t1) t1.rightAlignText()
-          if (t2) t2.rightAlignText()
-        } else {
-          c.addSpacer()
-        }
-      }
-    }  
-    if (x != arguments.length - 1) {
-       r.addSpacer()
-    }
-  }
-  return r
-}
-
-let padding = 6*Device.screenScale()
-let paddingLine = 1*Device.screenScale()
-let w = new ListWidget()
-w.setPadding(0, 0, 0, 0)
-w.minimumScaleFactor = 0.6
-
-let g = new LinearGradient()
-g.colors = [new Color("64C5E8"),new Color("2F83B9")]
-g.locations = [0,1.5]
-w.backgroundGradient = g
-
-let s = w.addStack()
-s.layoutVertically()
-
-// row 1
-let f = new DateFormatter()
-f.useMediumDateStyle()
-f.useShortTimeStyle()
-// layout data on widget
 
 // setup
 let padding = 6*Device.screenScale()
@@ -131,6 +63,9 @@ function row(p) {
   let r = p.addStack()
   let vertical = 0
   for (let x = 1; x < arguments.length; x++) {
+    if (x == 1 && arguments[1][0].center) {
+      r.addSpacer()
+    }
     let i = arguments[x]
     let c = r.addStack()
     for (let y = 0; y < i.length; y++) {
@@ -144,10 +79,12 @@ function row(p) {
       }
       let tc = c.addStack(), t1 = null, t2 = null
       tc.setPadding(s.padt || 0, 0, s.padb || 0, 0)
+    
       t1 = tc.addText(s.t1)
       t1.textColor = Color.white()
       t1.font = s.f1|| fl16
       t1.lineLimit = 1
+
       if (s.t2) {
         t2 = tc.addText(s.t2)
         t2.textColor = Color.white()
@@ -171,6 +108,9 @@ function row(p) {
     }  
     if (x != arguments.length - 1) {
        r.addSpacer()
+    }
+    if (x == 1 && arguments[1][0].center) {
+      r.addSpacer()
     }
   }
   return r
@@ -242,17 +182,54 @@ if (widgetFamily == "small") {
   { t1: `${d.station_name}`, f1: fm16 },
   { t1: `${f.string(new Date(dd.time_utc * 1000))}` } ]
   )
-  r1.setPadding(padding, padding, 0, padding)
-  s.addSpacer()
+  if (widgetFamily == "medium") {
+    r1.setPadding(padding, padding, 0, padding)
+    s.addSpacer()
+  } else {
+    r1.setPadding(padding, padding, padding,padding)
+    s.addSpacer()
+    
+    let health = "", color = "000000"
+    if (dd.health_idx == 0) {
+      health = "Healthy"
+      color = "83A3D2"
+    } else if (dd.health_idx == 1) {  
+      health = "Fine"
+      color = "3EC59D"
+    } else if (dd.health_idx == 2) {
+      health = "Fair"
+      color = "F8E71D"
+    } else if (dd.health_idx == 3) {
+      health = "Poor"
+      color = "FEC470"
+    } else if (dd.health_idx == 4) {
+      health = "Unhealthy"
+      color = "FF666B"
+    }
+    
+    if (health != "") {
+      let r1X = row(s, [ 
+      { t1: `${health}`, f1: fm40, center: true } ]
+      )
+      r1X.setPadding(padding, padding, padding, padding)
+      r1X.backgroundColor = new Color(color)
+    }
+  }
   
   // row 2
+  f.useNoDateStyle()
   let r2 = row(s, [
   { t1: `${dd.Temperature.toFixed(1)}`, f1: fm40, t2: `°`, f2: fl40 } ], [
-  { t1: `⤒ ${(dd.max_temp || dd.Temperature).toFixed(1)}°`, vertical: 2, padt: 6 },
-  { t1: `⤓ ${(dd.min_temp || dd.Temperature).toFixed(1)}°`, padb: 6 } ]
+  { t1: `⤒ ${(dd.max_temp || dd.Temperature).toFixed(1)}° at ${f.string(new Date(dd.date_max_temp * 1000 || dd.time_utc * 1000))}`, vertical: 2, padt: 6 },
+  { t1: `⤓ ${(dd.min_temp || dd.Temperature).toFixed(1)}° at ${f.string(new Date(dd.date_min_temp * 1000 || dd.time_utc * 1000))}`, padb: 6 } ]
   )
-  r2.setPadding(0, padding, 0, padding)
-  s.addSpacer()
+  if (widgetFamily == "medium") {  
+    r2.setPadding(0, padding, 0, padding)
+    s.addSpacer()
+  } else {
+    r2.setPadding(padding, padding, padding, padding)
+    s.addSpacer()
+  }
   
   // row 3
   let r3 = row(s, [
@@ -268,7 +245,11 @@ if (widgetFamily == "small") {
   { t1: `PRESSURE`, vertical: paddingLine },
   { t1: `${Math.trunc(dd.AbsolutePressure)}`, f1: fm16, t2: ` mbar` }
   ])
-  r3.setPadding(padding/2, padding, padding/2, padding)
+  if (widgetFamily == "medium") {
+    r3.setPadding(padding/2, padding, padding/2, padding)
+  } else {
+    r3.setPadding(padding, padding, padding, padding)
+  }
   r3.backgroundColor = g.colors[0]
 }
 
