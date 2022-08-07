@@ -4,21 +4,24 @@ https://github.com/fredrikdev/NetatmoSIAQM
 
 Scriptable Widget for the Netatmo Smart Indoor Air Quality Monitor (usually interfaced with by the iOS app Netatmo Home Coach) using the Netatmo Aircare API.
 
-1) Create a new script in the iOS Scriptable app, add a name, color, glyph, and paste this script.
-2) Login to your Netatmo Account at https://dev.netatmo.com/, and create a new app: https://dev.netatmo.com/apps/createanapp
-3) Copy the fields Client Id and Client Secret (perhaps into iOS Notes), and construct & copy a string like this (use space/newline to separate fields):
-client_id:6r782b9VBJJKksqp2c204070
-client_secret:CoCNPDjo9XXXXXXYYYyEJWEwwzXXXXXN16d1
-username:yournetatmoaccount@email.com
-password:secretpassword
-4) Paste the string in the params variable below.
-5) On your home screen, add the new Scriptable Widget as a (medium sized preferred) widget with the script.
+1) Login to your Netatmo Account at https://dev.netatmo.com/, and create a new app: https://dev.netatmo.com/apps/createanapp (yes, unfortunately you'll need to do this, but it's pretty swift)
+2) Fill in the mandatory fields, save, and continue by setting the Redirect URI field to "https://noop". Save again, and take note of the Client Id and Client Secret fields.
+3a) Using your browser, construct and browse to the URL: https://api.netatmo.com/oauth2/authorize?client_id=xxx&scope=read_homecoach&redirect_uri=https://noop
+3b) ...After authenticating with Netatmo, you'll be redirected to a non-existing URL (e.g. https://noop/?code=yyy). Copy the value (yyy) from the &code= parameter.
+
+4) Create a new script in the iOS Scriptable app, add a name, color, glyph, and paste this script.
+5) Edit the script below and set the 'params' variable with your own Client Id, Client Secret and value from the &code= parameter.
+6) On your home screen, add the new Scriptable Widget as a (medium sized preferred) widget with the script.
 
 Provided for free, MIT, as-is, by fredrikdev 2022. Inspired by https://github.com/olf/scriptable-netatmo-widget
 */
 
 // parameters -- modify this & keep it private
-let params = ``
+let params = `
+client_id:aaa
+client_secret:bbb
+code:yyy
+`
 
 function param(name) {
   try {
@@ -36,21 +39,55 @@ if (params == "") {
   dd = d.dashboard_data
 } else {  
   try {   
-    // authenticate to get acces_token
-    let req1 = new Request("https://api.netatmo.net/oauth2/token")
-    req1.method = "POST"
-    req1.addParameterToMultipart("grant_type", "password")
-    req1.addParameterToMultipart("client_id", param("client_id"))
-    req1.addParameterToMultipart("client_secret", param("client_secret"))
-    req1.addParameterToMultipart("username", param("username"))
-    req1.addParameterToMultipart("password", param("password"))
-    req1.addParameterToMultipart("scope", "read_homecoach")
-    let res1 = await req1.loadJSON()
-    if (!res1.access_token)
-      throw new Error("Authentication error")
+    let client_id = param("client_id")
+    let client_secret = param("client_secret")
+    let code = param("code")
+    if (client_id == "" || client_secret == "" || code == "")
+       throw new Error("Missing configuration parameters")
+    let key_id = client_id + "-" + code + "-refresh_token"
+    let refresh_token = Keychain.contains(key_id) ? Keychain.get(key_id) : ""
+    let access_token = ""
+
+    if (refresh_token == "") {
+        // get initial tokens
+        let req1 = new Request("https://api.netatmo.net/oauth2/token")
+        req1.method = "POST"
+        req1.addParameterToMultipart("grant_type", "authorization_code")
+        req1.addParameterToMultipart("redirect_uri", "https://noop")
+        req1.addParameterToMultipart("scope", "read_homecoach")
+        req1.addParameterToMultipart("client_id", client_id)
+        req1.addParameterToMultipart("client_secret", client_secret)
+        req1.addParameterToMultipart("code", code)
+        let res1 = await req1.loadJSON()
+
+        if (!res1.access_token || !res1.refresh_token)
+          throw new Error("Authentication error (1)")
+
+        // save refresh_token for next run
+        Keychain.set(key_id, res1.refresh_token)
+
+        access_token = res1.access_token
+    } else {
+        // use refresh_token to get new access_token
+        let req1 = new Request("https://api.netatmo.net/oauth2/token")
+        req1.method = "POST"
+        req1.addParameterToMultipart("grant_type", "refresh_token")
+        req1.addParameterToMultipart("redirect_uri", "https://noop")
+        req1.addParameterToMultipart("client_id", client_id)
+        req1.addParameterToMultipart("client_secret", client_secret)
+        req1.addParameterToMultipart("refresh_token", refresh_token)
+        let res1 = await req1.loadJSON()
+        if (!res1.access_token || !res1.refresh_token)
+          throw new Error("Authentication error (2)")
+
+        // save refresh_token for next run (this usually doesn't change)
+        Keychain.set(key_id, res1.refresh_token)
+
+        access_token = res1.access_token
+    }
       
     // request the data
-    let req2 = new Request(`https://api.netatmo.net/api/gethomecoachsdata?access_token=${encodeURI(res1.access_token)}`)
+    let req2 = new Request(`https://api.netatmo.net/api/gethomecoachsdata?access_token=${encodeURI(access_token)}`)
     let res2 = await req2.loadJSON()
     if (!res2.body || !res2.body.devices || res2.body.devices.length == 0)
        throw new Error("No data received")
