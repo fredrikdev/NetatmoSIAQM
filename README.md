@@ -16,17 +16,14 @@ https://github.com/fredrikdev/NetatmoSIAQM
 
 ## Setup
 
-1) Create a new script in the [iOS Scriptable app](https://scriptable.app/) add a name, color, glyph, and paste [this script](NetatmoSIAQM.js).
-2) Login to your Netatmo Account at https://dev.netatmo.com/, and create a new app: https://dev.netatmo.com/apps/createanapp
-3) Copy the fields Client Id and Client Secret (perhaps into iOS Notes), and construct & copy a string like this (use space/newline to separate fields):
-   
-        client_id:6r782b9VBJJKksqp2c204070
-        client_secret:CoCNPDjo9XXXXXXYYYyEJWEwwzXXXXXN16d1
-        username:yournetatmoaccount@email.com
-        password:secretpassword
 
-4) Paste the string in the params variable in the script.
-5) On your home screen, add the new Scriptable Widget as a (medium sized preferred) widget with the script.
+1) Login to your Netatmo Account at https://dev.netatmo.com/, and create a new app: https://dev.netatmo.com/apps/createanapp (yes, unfortunately you'll need to do this, but it's pretty swift)
+2) Fill in the mandatory fields, save, and continue by setting the Redirect URI field to "https://noop". Save again, and take note of the Client Id (aaa) and Client Secret (bbb) fields.
+3) Using your browser, construct and browse to the URL: https://api.netatmo.com/oauth2/authorize?client_id=aaa&scope=read_homecoach&redirect_uri=https://noop
+4) ...After authenticating with Netatmo, you'll be redirected to a non-existing URL (e.g. https://noop/?code=ccc). Copy the value (ccc) from the &code= parameter.
+6) Create a new script in the [iOS Scriptable app](https://scriptable.app/) add a name, color, glyph, and paste [this script](NetatmoSIAQM.js).
+7) Edit the script below and set the 'params' variable with your own Client Id, Client Secret and value from the &code= parameter.
+8) On your home screen, add the new Scriptable Widget as a (medium sized preferred) widget with the script.
 
 ## Credits
 
